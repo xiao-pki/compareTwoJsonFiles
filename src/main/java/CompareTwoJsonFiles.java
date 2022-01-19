@@ -5,8 +5,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import com.google.gson.*;
+import org.json.JSONObject;
 
 public class CompareTwoJsonFiles {
+  private Gson gson = new Gson();
+
   public void test() {
     String logFolder = "/Users/xiaodong/projects/github/apiCapture/_log";
     String baseFile = "develop-post-patch-base";
@@ -70,7 +74,34 @@ public class CompareTwoJsonFiles {
     return true;
   }
 
+  private JsonObject convertToJsonObjectFromStringJson(String data) {
+    JsonElement je = gson.fromJson(data, JsonElement.class);
+    return je.getAsJsonObject();
+  }
+
+  private JsonObject convertToJson(String data) {
+    JsonObject jo = convertToJsonObjectFromStringJson(data);
+    jo.add("request", convertToJsonObjectFromStringJson(jo.get("request").getAsString()));
+    jo.add("response", convertToJsonObjectFromStringJson(jo.get("response").getAsString()));
+    return jo;
+  }
+
   private boolean compareTwoLines(String line1, String line2) {
+    JsonElement o1 = convertToJson(line1);
+    JsonElement o2 = convertToJson(line2);
+    boolean b = o1.equals(o2);
+    return b;
+  }
+
+  private boolean compareTwoLines_save2(String line1, String line2) {
+    JsonParser p = new JsonParser();
+    JsonElement o1 = p.parse(line1);
+    JsonElement o2 = p.parse(line2);
+    boolean b = o1.equals(o2);
+    return b;
+  }
+
+  private boolean compareTwoLines_save(String line1, String line2) {
     return line1.equals(line2);
   }
 
