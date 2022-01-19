@@ -2,12 +2,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class CompareTwoJsonFiles {
   public void test() {
     String logFolder = "/Users/xiaodong/projects/github/apiCapture/_log";
-    String baseFile = "develop-post-base";
+    String baseFile = "develop-post-patch-base";
 
     try {
       File dir = new File(logFolder);
@@ -31,27 +33,34 @@ public class CompareTwoJsonFiles {
     List<String> listBase = readFile(fileBase);
     List<String> listLast = readFile(fileLast);
 
+    Set<Integer> matched = new HashSet<>();
     int lineNumber = 0;
     for (String line: listBase) {
       lineNumber++;
       boolean found = false;
       for (int i = 0; i < listLast.size(); i++) {
-        if (compareTwoLines(line, listLast.get(i))) {
-          // found match, remove it
-          listLast.remove(i);
+        if (matched.contains(i)) {
+          continue;
+        } else if (compareTwoLines(line, listLast.get(i))) {
           found = true;
           System.out.println(String.format("line #%d found in latest at line #%d", lineNumber, i+1));
+          matched.add(i);
           break;
         }
       }
       if (!found) {
         System.out.println(String.format("line #%d of base not found in latest file", lineNumber));
+        System.out.println(line);
+        System.out.println(fileBase);
+        System.out.println(fileLast);
         return false;
       }
     }
 
-    if (listLast.size() > 0) {
-      System.out.println("oops, the latest file have more entries!");
+    if (listLast.size() != listBase.size()) {
+      System.out.println("oops, they are not the same size!");
+      System.out.println(fileBase);
+      System.out.println(fileLast);
       return false;
     }
 
