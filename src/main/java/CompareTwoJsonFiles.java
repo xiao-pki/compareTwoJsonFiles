@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -21,7 +23,9 @@ public class CompareTwoJsonFiles {
       long last = Long.MIN_VALUE;
       File lastFile = null;
       for (File file: list) {
-        if (file.lastModified() > last) {
+        if (file.getName().endsWith(".converted")) {
+          continue;
+        } else if (file.lastModified() > last) {
           lastFile = file;
           last = file.lastModified();
         }
@@ -31,6 +35,23 @@ public class CompareTwoJsonFiles {
     } catch (Exception e) {
       System.out.println(e);
     }
+  }
+
+  private void convertFile(String filename, List<String> list) {
+    try {
+      FileWriter fw = new FileWriter(filename + ".converted");
+      String newLine = System.getProperty("line.separator");
+      for (int i = 0; i < list.size(); i++) {
+        String line = list.get(i);
+        JsonObject json = convertToJson(line);
+        String convertedLine = json.toString();
+        fw.write(convertedLine + newLine);
+      }
+      fw.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
   }
 
   private boolean impl(String fileBase, String fileLast) {
@@ -110,8 +131,11 @@ public class CompareTwoJsonFiles {
     try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
       String line;
       while ((line = br.readLine()) != null) {
-        list.add(line);
+        if (line.trim().length() > 0) {
+          list.add(line);
+        }
       }
+      convertFile(filename, list);
     } catch (Exception e) {
       System.out.println(e);
     }
